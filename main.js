@@ -10,7 +10,10 @@ const fs = require('fs')
 
 const ffmpeg = require('fluent-ffmpeg')
 
-const { event_keys } = require('./constants')
+const { event_keys, paths } = require('./constants')
+
+ffmpeg.setFfmpegPath(paths.ffmpeg)
+ffmpeg.setFfprobePath(paths.ffprobe)
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -66,17 +69,6 @@ app.on('activate', function () {
 
 
 const ipc = require('electron').ipcMain
-
-// const path = require('path')
-
-const exampleParsedFilePath = {
-    root: '/',
-    dir: '/home/dolphin/Desktop/D.Va/Eichenwalde',
-    base: '08-16-05.mp4',
-    ext: '.mp4',
-    name: '08-16-05'
-}
-
 
 
 ipc.on(event_keys.GET_INPUT_PATH, function (event, filePath) {

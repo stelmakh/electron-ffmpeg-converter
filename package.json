@@ -17,6 +17,8 @@
     "electron": "~1.7.8"
   },
   "dependencies": {
+    "ffmpeg-static-electron": "^2.0.1",
+    "ffprobe-static-electron": "^2.0.0",
     "fluent-ffmpeg": "^2.1.2"
   }
 }
