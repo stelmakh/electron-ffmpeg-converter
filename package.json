@@ -1,0 +1,22 @@
+{
+  "name": "@stelmakh/electron-ffmpeg-converter",
+  "version": "0.1.0",
+  "description": "A simple video2image converter using ffmpeg",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/stelmakh/electron-ffmpeg-converter",
+  "keywords": [
+    "electron",
+    "ffmpeg"
+  ],
+  "author": "GitHub",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "~1.7.8"
+  },
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}
