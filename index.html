@@ -24,14 +24,26 @@
 </head>
 
 <body>
-  <h1>video2image converter</h1>
+  <button id='toggle-mode'>Toggle mode</button>
 
-  <div class='section'>
-    <button id="select-dir">Select output directory</button>
-    <div id="selected-dir-path"></div>
+  <div id='v2i' style='display: block;'>
+    <h1>video2image converter</h1>
+  </div>
+
+  <div id='i2v' style='display: none;'>
+    <h1>image2video converter</h1>
+    <p>
+      Please make sure all images are following image%d.jpg naming convention
+      The video will be saved to the same directory
+    </p>
   </div>
 
   <div class='section'>
+    <button id="select-dir">Select directory</button>
+    <div id="selected-dir-path"></div>
+  </div>
+
+  <div class='section' id='file-section'>
     <button id="select-file">Select video file to convert</button>
     <div id="selected-file-path"></div>
   </div>
@@ -43,6 +55,8 @@
 
   <progress id="progress" value="0" max="100"></progress>
   <p id='message'></p>
+
+
 </body>
 
 </html>

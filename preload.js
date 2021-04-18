@@ -7,11 +7,43 @@ window.addEventListener('DOMContentLoaded', () => {
   const selectFileButton = document.getElementById('select-file');
   const selectedFilePath = document.getElementById('selected-file-path');
 
+  const toggleModeButton = document.getElementById('toggle-mode');
+
   const convertButton = document.getElementById('convert');
   const clearButton = document.getElementById('clear');
 
   const progress = document.getElementById('progress');
   const message = document.getElementById('message');
+  const fileSection = document.getElementById('file-section');
+
+  const v2i = document.getElementById('v2i');
+  const i2v = document.getElementById('i2v');
+
+  const clear = () => {
+    ipc.send(eventKeys.CLEAR);
+    progress.style.visibility = 'hidden';
+    convertButton.style.visibility = 'hidden';
+    clearButton.style.visibility = 'hidden';
+    selectedDirPath.innerText = '';
+    selectedFilePath.innerText = '';
+    message.innerText = '';
+  };
+
+  toggleModeButton.addEventListener('click', () => {
+    if (v2i.style.display === 'block') {
+      // switch to image2video
+      v2i.style.display = 'none';
+      i2v.style.display = 'block';
+      fileSection.style.display = 'none';
+    } else {
+      // switch to video2image
+      v2i.style.display = 'block';
+      i2v.style.display = 'none';
+      fileSection.style.display = 'block';
+    }
+    ipc.send(eventKeys.TOGGLE_MODE);
+    clear();
+  });
 
   selectDirButton.addEventListener('click', () => {
     ipc.send(eventKeys.OPEN_OUT_DIR_DIALOG);
@@ -22,17 +54,17 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   convertButton.addEventListener('click', () => {
-    ipc.send(eventKeys.CONVERT_VIDEO_TO_IMAGE);
+    if (v2i.style.display === 'block') {
+      // video2image mode
+      ipc.send(eventKeys.CONVERT_VIDEO_TO_IMAGE);
+    } else {
+      // image2video mode
+      ipc.send(eventKeys.CONVERT_IMAGE_TO_VIDEO);
+    }
   });
 
   clearButton.addEventListener('click', () => {
-    ipc.send(eventKeys.CLEAR);
-    progress.style.visibility = 'hidden';
-    convertButton.style.visibility = 'hidden';
-    clearButton.style.visibility = 'hidden';
-    selectedDirPath.innerText = '';
-    selectedFilePath.innerText = '';
-    message.innerText = '';
+    clear();
   });
 
   ipc.on(eventKeys.SET_OUTPUT_PATH, (event, arg) => {

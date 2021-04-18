@@ -43,6 +43,11 @@ app.on('window-all-closed', () => {
 
 let outPath = null;
 let filePath = null;
+let mode = 'v2i';
+
+ipc.on(eventKeys.TOGGLE_MODE, () => {
+  mode = mode === 'v2i' ? 'i2v' : 'v2i';
+});
 
 ipc.on(eventKeys.OPEN_FILE_DIALOG, (event) => {
   dialog.showOpenDialog({ properties: ['openFile'] }).then(({ canceled, filePaths }) => {
@@ -60,6 +65,9 @@ ipc.on(eventKeys.OPEN_OUT_DIR_DIALOG, (event) => {
 
     [outPath] = filePaths;
     event.reply(eventKeys.SET_OUTPUT_PATH, outPath);
+    if (mode === 'i2v') {
+      event.reply(eventKeys.READY);
+    }
   });
 });
 
@@ -69,9 +77,6 @@ ipc.on(eventKeys.CONVERT_VIDEO_TO_IMAGE, (event) => {
   }
 
   try {
-    const { dir } = path.parse(filePath);
-    const outDir = outPath || dir;
-
     event.reply(eventKeys.SET_PROGRESS, 10);
     ffmpeg(filePath)
       .on('codecData', (data) => {
@@ -89,13 +94,42 @@ ipc.on(eventKeys.CONVERT_VIDEO_TO_IMAGE, (event) => {
         console.log(`progress percent: ${percent}`);
         event.reply(eventKeys.SET_PROGRESS, percent);
       })
-      .output(`${outDir}/image%d.jpg`)
+      .output(`${outPath}/image%d.jpg`)
       .run();
   } catch (error) {
     event.reply(eventKeys.FAILURE, error);
   }
 });
 
+ipc.on(eventKeys.CONVERT_IMAGE_TO_VIDEO, (event) => {
+  if (!outPath) {
+    return;
+  }
+
+  try {
+    event.reply(eventKeys.SET_PROGRESS, 10);
+    ffmpeg(`${outPath}/image%d.jpg`)
+      .on('codecData', (data) => {
+        console.log(data);
+      })
+      .on('end', () => {
+        console.log('file has been converted succesfully');
+        event.reply(eventKeys.SUCCESS);
+      })
+      .on('error', (err) => {
+        console.log(`an error happened: ${err.message}`);
+        event.reply(eventKeys.FAILURE, err.message);
+      })
+      .on('progress', ({ percent }) => {
+        console.log(`progress percent: ${percent}`);
+        event.reply(eventKeys.SET_PROGRESS, percent);
+      })
+      .output(`${outPath}/video.mp4`)
+      .run();
+  } catch (error) {
+    event.reply(eventKeys.FAILURE, error);
+  }
+});
 ipc.on(eventKeys.CLEAR, () => {
   outPath = null;
   filePath = null;
