@@ -9,7 +9,11 @@ const paths = {
 
 const event_keys = {
     GET_INPUT_PATH: 'GET_INPUT_PATH',
-    SHOW_DIALOG: 'SHOW_DIALOG'
+    SET_OUTPUT_PATH: 'SET_OUTPUT_PATH',
+    SHOW_DIALOG: 'SHOW_DIALOG',
+    SET_PROGRESS: 'SET_PROGRESS',
+    SUCCESS: 'SUCCESS',
+    FAILURE: 'FAILURE',
 }
 
 

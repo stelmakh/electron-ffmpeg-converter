@@ -69,7 +69,13 @@ app.on('activate', function () {
 
 
 const ipc = require('electron').ipcMain
+let outPath = null
 
+
+ipc.on(event_keys.SET_OUTPUT_PATH, function (event, filePath) {
+  console.log('outPath', filePath)
+  outPath = filePath
+})
 
 ipc.on(event_keys.GET_INPUT_PATH, function (event, filePath) {
 
@@ -77,21 +83,28 @@ ipc.on(event_keys.GET_INPUT_PATH, function (event, filePath) {
 
     try {
         const { ext, name, dir } = path.parse(filePath)
+        const outDir = outPath || dir
+
         const proc = ffmpeg(filePath)
             .on('codecData', function(data) {
                 console.log(data);
             })
             .on('end', function() {
                 console.log('file has been converted succesfully');
+                event.reply(event_keys.SUCCESS);
             })
             .on('error', function(err) {
                 console.log('an error happened: ' + err.message);
+                event.reply(event_keys.FAILURE, err.message);
             })
             .on('progress', function({ percent }) {
                 console.log('progress percent: ' + percent);
+                event.reply(event_keys.SET_PROGRESS, percent);
             })
-            .size('50%')
-            .save(`${dir}/${name}2${ext}`)
+            .output(`${outDir}/image%d.jpg`)
+            .run()
+            // .size('50%')
+            // .save(`${dir}/${name}2${ext}`)
     } catch (error) {
         console.log(error)
     }
