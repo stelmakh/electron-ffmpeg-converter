@@ -1,8 +1,9 @@
 # FFmpeg converter
 
-An Electron app using ffmpeg to manipulate video files
+FFmpeg based video to images converter
 
 ## How to run
 
 `npm install`
+
 `npm start`
