@@ -7,10 +7,11 @@ const paths = {
     ffprobe: ffprobe.path
 }
 
-const event_keys = {
+const eventKeys = {
     GET_INPUT_PATH: 'GET_INPUT_PATH',
     SET_OUTPUT_PATH: 'SET_OUTPUT_PATH',
-    SHOW_DIALOG: 'SHOW_DIALOG',
+    OPEN_FILE_DIALOG: 'OPEN_FILE_DIALOG',
+    OPEN_OUT_DIR_DIALOG: 'OPEN_OUT_DIR_DIALOG',
     SET_PROGRESS: 'SET_PROGRESS',
     SUCCESS: 'SUCCESS',
     FAILURE: 'FAILURE',
@@ -18,6 +19,6 @@ const event_keys = {
 
 
 module.exports = {
-    event_keys,
+    eventKeys,
     paths
 }

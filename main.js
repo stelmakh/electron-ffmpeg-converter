@@ -1,114 +1,87 @@
-const electron = require('electron')
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
+const {
+  app, BrowserWindow, dialog, nativeTheme, ipcMain: ipc,
+} = require('electron');
 
-const path = require('path')
-const url = require('url')
-const fs = require('fs')
+const path = require('path');
 
-const ffmpeg = require('fluent-ffmpeg')
+const ffmpeg = require('fluent-ffmpeg');
 
-const { event_keys, paths } = require('./constants')
+const { eventKeys, paths } = require('./constants');
 
-ffmpeg.setFfmpegPath(paths.ffmpeg)
-ffmpeg.setFfprobePath(paths.ffprobe)
+ffmpeg.setFfmpegPath(paths.ffmpeg);
+ffmpeg.setFfprobePath(paths.ffprobe);
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+function createWindow() {
+  nativeTheme.themeSource = 'light';
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
 
-function createWindow () {
-  // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
-
-  // and load the index.html of the app.
-  mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
-    protocol: 'file:',
-    slashes: true
-  }))
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools()
-
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-  })
+  win.loadFile('index.html');
+  win.webContents.openDevTools();
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.whenReady().then(() => {
+  createWindow();
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-app.on('activate', function () {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
-
-const ipc = require('electron').ipcMain
-let outPath = null
-
-
-ipc.on(event_keys.SET_OUTPUT_PATH, function (event, filePath) {
-  console.log('outPath', filePath)
-  outPath = filePath
-})
-
-ipc.on(event_keys.GET_INPUT_PATH, function (event, filePath) {
-
-    console.log(filePath)
-
-    try {
-        const { ext, name, dir } = path.parse(filePath)
-        const outDir = outPath || dir
-
-        const proc = ffmpeg(filePath)
-            .on('codecData', function(data) {
-                console.log(data);
-            })
-            .on('end', function() {
-                console.log('file has been converted succesfully');
-                event.reply(event_keys.SUCCESS);
-            })
-            .on('error', function(err) {
-                console.log('an error happened: ' + err.message);
-                event.reply(event_keys.FAILURE, err.message);
-            })
-            .on('progress', function({ percent }) {
-                console.log('progress percent: ' + percent);
-                event.reply(event_keys.SET_PROGRESS, percent);
-            })
-            .output(`${outDir}/image%d.jpg`)
-            .run()
-            // .size('50%')
-            // .save(`${dir}/${name}2${ext}`)
-    } catch (error) {
-        console.log(error)
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
     }
+  });
+});
 
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
 
+let outPath = null;
 
-})
+ipc.on(eventKeys.OPEN_FILE_DIALOG, (event) => {
+  dialog.showOpenDialog({ properties: ['openFile'] }).then(({ canceled, filePaths }) => {
+    if (canceled) return;
+
+    const filePath = filePaths[0];
+    try {
+      const { dir } = path.parse(filePath);
+      const outDir = outPath || dir;
+
+      event.reply(eventKeys.SET_PROGRESS, 10);
+      ffmpeg(filePath)
+        .on('codecData', (data) => {
+          console.log(data);
+        })
+        .on('end', () => {
+          console.log('file has been converted succesfully');
+          event.reply(eventKeys.SUCCESS);
+        })
+        .on('error', (err) => {
+          console.log(`an error happened: ${err.message}`);
+          event.reply(eventKeys.FAILURE, err.message);
+        })
+        .on('progress', ({ percent }) => {
+          console.log(`progress percent: ${percent}`);
+          event.reply(eventKeys.SET_PROGRESS, percent);
+        })
+        .output(`${outDir}/image%d.jpg`)
+        .run();
+    } catch (error) {
+      event.reply(eventKeys.FAILURE, error);
+    }
+  });
+});
+
+ipc.on(eventKeys.OPEN_OUT_DIR_DIALOG, (event) => {
+  dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory', 'promptToCreate'] }).then(({ canceled, filePaths }) => {
+    if (canceled) return;
+
+    [outPath] = filePaths;
+    event.reply(eventKeys.SET_OUTPUT_PATH, outPath);
+  });
+});
