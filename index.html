@@ -3,22 +3,46 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Hello World!</title>
+  <title>video2image converter</title>
+  <style>
+    #progress,
+    #convert,
+    #clear {
+      visibility: hidden;
+    }
+
+    .section {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section button {
+      margin-right: 12px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>Hello World!</h1>
+  <h1>video2image converter</h1>
 
-  <!--<input type="file" accept="video/mp4" />-->
+  <div class='section'>
+    <button id="select-dir">Select output directory</button>
+    <div id="selected-dir-path"></div>
+  </div>
 
-  <button id="select-dir">Select output directory</button>
-  <div id="selected-dir-path"></div>
+  <div class='section'>
+    <button id="select-file">Select video file to convert</button>
+    <div id="selected-file-path"></div>
+  </div>
 
-  <button id="select-file">Select video file to convert</button>
+  <div class='section'>
+    <button id='convert'>Convert</button>
+    <button id='clear'>Clear</button>
+  </div>
 
   <progress id="progress" value="0" max="100"></progress>
-  <p id='message' />
-
+  <p id='message'></p>
 </body>
 
 </html>

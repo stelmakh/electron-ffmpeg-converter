@@ -42,38 +42,15 @@ app.on('window-all-closed', () => {
 });
 
 let outPath = null;
+let filePath = null;
 
 ipc.on(eventKeys.OPEN_FILE_DIALOG, (event) => {
   dialog.showOpenDialog({ properties: ['openFile'] }).then(({ canceled, filePaths }) => {
     if (canceled) return;
 
-    const filePath = filePaths[0];
-    try {
-      const { dir } = path.parse(filePath);
-      const outDir = outPath || dir;
-
-      event.reply(eventKeys.SET_PROGRESS, 10);
-      ffmpeg(filePath)
-        .on('codecData', (data) => {
-          console.log(data);
-        })
-        .on('end', () => {
-          console.log('file has been converted succesfully');
-          event.reply(eventKeys.SUCCESS);
-        })
-        .on('error', (err) => {
-          console.log(`an error happened: ${err.message}`);
-          event.reply(eventKeys.FAILURE, err.message);
-        })
-        .on('progress', ({ percent }) => {
-          console.log(`progress percent: ${percent}`);
-          event.reply(eventKeys.SET_PROGRESS, percent);
-        })
-        .output(`${outDir}/image%d.jpg`)
-        .run();
-    } catch (error) {
-      event.reply(eventKeys.FAILURE, error);
-    }
+    filePath = filePaths[0];
+    event.reply(eventKeys.SET_FILE_PATH, filePath);
+    event.reply(eventKeys.READY);
   });
 });
 
@@ -84,4 +61,42 @@ ipc.on(eventKeys.OPEN_OUT_DIR_DIALOG, (event) => {
     [outPath] = filePaths;
     event.reply(eventKeys.SET_OUTPUT_PATH, outPath);
   });
+});
+
+ipc.on(eventKeys.CONVERT_VIDEO_TO_IMAGE, (event) => {
+  if (!filePath) {
+    return;
+  }
+
+  try {
+    const { dir } = path.parse(filePath);
+    const outDir = outPath || dir;
+
+    event.reply(eventKeys.SET_PROGRESS, 10);
+    ffmpeg(filePath)
+      .on('codecData', (data) => {
+        console.log(data);
+      })
+      .on('end', () => {
+        console.log('file has been converted succesfully');
+        event.reply(eventKeys.SUCCESS);
+      })
+      .on('error', (err) => {
+        console.log(`an error happened: ${err.message}`);
+        event.reply(eventKeys.FAILURE, err.message);
+      })
+      .on('progress', ({ percent }) => {
+        console.log(`progress percent: ${percent}`);
+        event.reply(eventKeys.SET_PROGRESS, percent);
+      })
+      .output(`${outDir}/image%d.jpg`)
+      .run();
+  } catch (error) {
+    event.reply(eventKeys.FAILURE, error);
+  }
+});
+
+ipc.on(eventKeys.CLEAR, () => {
+  outPath = null;
+  filePath = null;
 });
