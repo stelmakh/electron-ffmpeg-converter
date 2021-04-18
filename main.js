@@ -11,6 +11,7 @@ const { eventKeys, paths } = require('./constants');
 ffmpeg.setFfmpegPath(paths.ffmpeg);
 ffmpeg.setFfprobePath(paths.ffprobe);
 
+// create main window
 function createWindow() {
   nativeTheme.themeSource = 'light';
   const win = new BrowserWindow({
@@ -41,14 +42,17 @@ app.on('window-all-closed', () => {
   }
 });
 
-let outPath = null;
+// app state
+let dirPath = null;
 let filePath = null;
 let mode = 'v2i';
 
+// handle mode change
 ipc.on(eventKeys.TOGGLE_MODE, () => {
   mode = mode === 'v2i' ? 'i2v' : 'v2i';
 });
 
+// open file selection dialog
 ipc.on(eventKeys.OPEN_FILE_DIALOG, (event) => {
   dialog.showOpenDialog({ properties: ['openFile'] }).then(({ canceled, filePaths }) => {
     if (canceled) return;
@@ -59,18 +63,20 @@ ipc.on(eventKeys.OPEN_FILE_DIALOG, (event) => {
   });
 });
 
+// open directory selection dialog
 ipc.on(eventKeys.OPEN_OUT_DIR_DIALOG, (event) => {
   dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory', 'promptToCreate'] }).then(({ canceled, filePaths }) => {
     if (canceled) return;
 
-    [outPath] = filePaths;
-    event.reply(eventKeys.SET_OUTPUT_PATH, outPath);
+    dirPath = filePaths[0];
+    event.reply(eventKeys.SET_OUTPUT_PATH, dirPath);
     if (mode === 'i2v') {
       event.reply(eventKeys.READY);
     }
   });
 });
 
+// run video to images conversion
 ipc.on(eventKeys.CONVERT_VIDEO_TO_IMAGE, (event) => {
   if (!filePath) {
     return;
@@ -94,21 +100,22 @@ ipc.on(eventKeys.CONVERT_VIDEO_TO_IMAGE, (event) => {
         console.log(`progress percent: ${percent}`);
         event.reply(eventKeys.SET_PROGRESS, percent);
       })
-      .output(`${outPath}/image%d.jpg`)
+      .output(`${dirPath}/image%d.jpg`)
       .run();
   } catch (error) {
     event.reply(eventKeys.FAILURE, error);
   }
 });
 
+// run images to video conversion
 ipc.on(eventKeys.CONVERT_IMAGE_TO_VIDEO, (event) => {
-  if (!outPath) {
+  if (!dirPath) {
     return;
   }
 
   try {
     event.reply(eventKeys.SET_PROGRESS, 10);
-    ffmpeg(`${outPath}/image%d.jpg`)
+    ffmpeg(`${dirPath}/image%d.jpg`)
       .on('codecData', (data) => {
         console.log(data);
       })
@@ -124,13 +131,13 @@ ipc.on(eventKeys.CONVERT_IMAGE_TO_VIDEO, (event) => {
         console.log(`progress percent: ${percent}`);
         event.reply(eventKeys.SET_PROGRESS, percent);
       })
-      .output(`${outPath}/video.mp4`)
+      .output(`${dirPath}/video.mp4`)
       .run();
   } catch (error) {
     event.reply(eventKeys.FAILURE, error);
   }
 });
 ipc.on(eventKeys.CLEAR, () => {
-  outPath = null;
+  dirPath = null;
   filePath = null;
 });

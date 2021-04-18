@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const convertButton = document.getElementById('convert');
   const clearButton = document.getElementById('clear');
 
-  const progress = document.getElementById('progress');
+  const progressBar = document.getElementById('progress');
   const message = document.getElementById('message');
   const fileSection = document.getElementById('file-section');
 
@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const clear = () => {
     ipc.send(eventKeys.CLEAR);
-    progress.style.visibility = 'hidden';
+    progressBar.style.visibility = 'hidden';
     convertButton.style.visibility = 'hidden';
     clearButton.style.visibility = 'hidden';
     selectedDirPath.innerText = '';
@@ -81,17 +81,17 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   ipc.on(eventKeys.SET_PROGRESS, (event, arg) => {
-    progress.style.visibility = 'visible';
-    progress.value = arg;
+    progressBar.style.visibility = 'visible';
+    progressBar.value = arg;
   });
 
   ipc.on(eventKeys.SUCCESS, () => {
-    progress.style.visibility = 'hidden';
+    progressBar.style.visibility = 'hidden';
     message.innerText = 'SUCCESS';
   });
 
   ipc.on(eventKeys.FAILURE, (event, arg) => {
-    progress.style.visibility = 'hidden';
+    progressBar.style.visibility = 'hidden';
     message.innerText = `Error: ${arg}`;
   });
 });
